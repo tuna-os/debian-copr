@@ -1,0 +1,86 @@
+name: XFCE Wayland Distributed Build and Publish (Debian)
+on:
+  workflow_dispatch:
+    inputs:
+      force:
+        description: Force rebuild even if package exists in repo
+        type: boolean
+        default: false
+
+env:
+  DISTRIBUTION: resolute
+  R2_BUCKET: bluefin
+
+jobs:
+  build-builder-image:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build builder image
+        run: podman build -t localhost/debian-copr-builder:resolute -f builder/Containerfile builder/
+      - name: Save image
+        run: podman save -o /tmp/builder-image.tar localhost/debian-copr-builder:resolute
+      - uses: actions/upload-artifact@v4
+        with:
+          name: builder-image
+          path: /tmp/builder-image.tar
+          retention-days: 1
+
+  build-xfwl4-compositor:
+    needs: build-builder-image
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with: {name: builder-image, path: /tmp}
+      - run: podman load -i /tmp/builder-image.tar
+      - name: Install host dependencies
+        run: sudo apt-get update -q && sudo apt-get install -y -q podman reprepro gnupg
+      - name: Import GPG key (no-op placeholder; real key imported at publish)
+        run: mkdir -p local-repo
+      - name: Build xfwl4
+        run: |
+          touch .build-marker
+          ARGS=(--package src/xfce-wayland/xfwl4)
+          if [[ "${{ github.event.inputs.force }}" == "true" ]]; then ARGS+=(--force); fi
+          ./scripts/build-chain.sh "${ARGS[@]}"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: repo-xfwl4-compositor
+          path: local-repo
+          retention-days: 1
+
+  publish:
+    needs: build-xfwl4-compositor
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install dependencies
+        run: |
+          sudo apt-get update -q && sudo apt-get install -y -q reprepro gnupg
+          curl -fsSL https://rclone.org/install.sh | sudo bash
+      - uses: actions/download-artifact@v4
+        with: {name: repo-xfwl4-compositor, path: local-repo}
+      - name: Import GPG key
+        uses: crazy-max/ghaction-import-gpg@v6
+        id: import-gpg
+        with:
+          gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
+          passphrase: ${{ secrets.GPG_PASSPHRASE }}
+      - name: Re-sign repo with real key
+        run: |
+          echo "SignWith: ${{ steps.import-gpg.outputs.fingerprint }}" # placeholder; conf/distributions already pins SignWith: default
+          reprepro -b local-repo --confdir "$(pwd)/conf" export "${DISTRIBUTION}"
+      - name: Configure rclone
+        run: |
+          mkdir -p ~/.config/rclone
+          cat > ~/.config/rclone/rclone.conf << EOF2
+          [r2]
+          type = s3
+          provider = Cloudflare
+          access_key_id = ${{ secrets.R2_ACCESS_KEY_ID }}
+          secret_access_key = ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          endpoint = https://${{ secrets.CLOUDFLARE_ACCOUNT_ID }}.r2.cloudflarestorage.com
+          EOF2
+      - name: Publish to R2
+        run: rclone sync local-repo/ "r2:${R2_BUCKET}/deb/26.04-resolute/"

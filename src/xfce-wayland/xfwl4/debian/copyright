@@ -1,0 +1,8 @@
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: xfwl4
+Source: https://gitlab.xfce.org/xfce/xfwl4
+
+Files: *
+Copyright: 2024-2026 The Xfce development team
+License: GPL-3.0-or-later AND Apache-2.0 AND MIT
+ See the upstream LICENSE file for the exact per-crate license mix.

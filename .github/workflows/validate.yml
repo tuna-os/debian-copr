@@ -1,0 +1,45 @@
+name: Validate
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  yaml-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: yamllint
+        run: |
+          sudo apt-get update -q && sudo apt-get install -y -q yamllint
+          yamllint -d "{extends: default, rules: {line-length: disable}}" build-order-xfce.yml conf/distributions .github/workflows/
+
+  shellcheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: shellcheck
+        run: sudo apt-get update -q && sudo apt-get install -y -q shellcheck && shellcheck scripts/*.sh
+
+  build-order-schema:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate build-order-xfce.yml resolves every package path
+        run: |
+          python3 - <<'PYEOF'
+          import yaml, pathlib, sys
+          bo = yaml.safe_load(open("build-order-xfce.yml"))
+          missing = []
+          for tier in bo["tiers"]:
+              for pkg in tier["packages"]:
+                  p = pathlib.Path(pkg["path"])
+                  if not (p / "debian" / "control").exists():
+                      missing.append(str(p))
+                  if not (p / "upstream-source.txt").exists():
+                      missing.append(str(p) + " (no upstream-source.txt)")
+          if missing:
+              print("Missing packaging for:", missing)
+              sys.exit(1)
+          print(f"All {sum(len(t['packages']) for t in bo['tiers'])} package(s) resolve.")
+          PYEOF

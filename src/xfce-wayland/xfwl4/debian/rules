@@ -1,0 +1,21 @@
+#!/usr/bin/make -f
+# Plain cargo build (network access during build, same pragmatic choice
+# as this package's RPM sibling in tuna-os/github-copr — this is our own
+# repo, not the official Debian/Ubuntu archive, so offline-reproducible
+# vendoring isn't a hard requirement here).
+export RUSTFLAGS = -C relocation-model=pic
+
+%:
+	dh $@
+
+override_dh_auto_build:
+	cargo build --release \
+	  --no-default-features \
+	  --features udev,egl,xwayland,smithay/renderer_pixman,smithay/renderer_gl
+
+override_dh_auto_install:
+	install -Dm755 target/release/xfwl4 debian/xfwl4/usr/bin/xfwl4
+	install -Dm644 resources/defaults debian/xfwl4/usr/share/xfce4/xfwl4/defaults
+
+override_dh_auto_test:
+	# No test suite wired up for this package yet.

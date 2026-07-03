@@ -1,0 +1,8 @@
+xfwl4 (4.21.0-1) resolute; urgency=medium
+
+  * Initial packaging for TunaOS's Debian/Ubuntu xfce-wayland stack.
+    Mirrors tuna-os/github-copr's RPM xfwl4 spec (pinned to upstream
+    commit 465880f67b5705136895bf69c60e2178ad351856, the only tag at
+    time of packaging: 4.21.0).
+
+ -- TunaOS Bot <bot@tunaos.org>  Thu, 03 Jul 2026 12:00:00 +0000

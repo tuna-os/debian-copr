@@ -1,0 +1,19 @@
+# Build-runner image: plain Ubuntu 26.04, no sbuild/schroot/debootstrap.
+# Every package builds inside a fresh, --rm'd instance of THIS image via
+# 'apt-get build-dep' + 'dpkg-buildpackage' directly in its own rootfs —
+# the container itself IS the throwaway isolated build environment,
+# exactly like mock's installroot in github-copr, minus the extra
+# chroot-within-a-container layer (schroot/sbuild) that caused most of
+# that pipeline's early fragility (nested-mount/permission issues).
+FROM ubuntu:26.04
+
+RUN apt-get update -q && \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y -q \
+        build-essential \
+        devscripts \
+        equivs \
+        fakeroot \
+        gnupg \
+        ca-certificates \
+        curl \
+    && rm -rf /var/lib/apt/lists/*
