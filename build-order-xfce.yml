@@ -3,8 +3,12 @@
 # builds once every earlier tier is already in the local apt repo, so its
 # build-deps resolve.
 #
-# R2 destination: deb/26.04-noble/ (served from deb.tunaos.org), separate
-# from any future non-XFCE debian-copr repo content.
+# Grows incrementally as each package is ported from its already-fixed
+# github-copr RPM spec (see that repo's build-order-xfce.yml for the full
+# target list and tier order — porting proceeds tier by tier).
+#
+# R2 destination: deb/26.04-resolute/ (served from deb.tunaos.org),
+# separate from any future non-XFCE debian-copr repo content.
 r2_path: deb/26.04-resolute
 distribution: resolute
 arch: amd64
@@ -13,33 +17,3 @@ tiers:
   - name: xfwl4-compositor
     packages:
       - path: src/xfce-wayland/xfwl4
-
-  - name: xfce-core-libs
-    packages:
-      - path: src/xfce-wayland/libxfce4util
-      - path: src/xfce-wayland/xfconf
-
-  - name: xfce-ui-libs
-    packages:
-      - path: src/xfce-wayland/libxfce4ui
-      - path: src/xfce-wayland/garcon
-      - path: src/xfce-wayland/libxfce4windowing
-
-  - name: xfce-desktop-core
-    packages:
-      - path: src/xfce-wayland/xfce4-panel
-      - path: src/xfce-wayland/xfce4-session
-      - path: src/xfce-wayland/xfce4-settings
-      - path: src/xfce-wayland/xfdesktop
-      - path: src/xfce-wayland/thunar
-
-  - name: xfce-apps
-    packages:
-      - path: src/xfce-wayland/xfce4-appfinder
-      - path: src/xfce-wayland/xfce4-terminal
-      - path: src/xfce-wayland/xfce4-power-manager
-      - path: src/xfce-wayland/xfce4-notifyd
-
-  - name: xfce-meta
-    packages:
-      - path: src/xfce-wayland/xfce4-wayland-meta
