@@ -37,6 +37,15 @@ fi
 pkg_name="$(basename "$PACKAGE")"
 mkdir -p "$LOCAL_REPO"
 
+# On the very first package ever built, the repo has no dists/<dist>/Release
+# or Packages files yet — `apt-get update` inside the build container fails
+# outright against a nonexistent index rather than an empty one. Export once
+# up front so the repo always has valid (if empty) metadata to serve.
+if [[ ! -f "${LOCAL_REPO}/dists/${DISTRIBUTION}/Release" ]]; then
+    echo "==> Initializing empty local repo for ${DISTRIBUTION}..."
+    reprepro -b "$LOCAL_REPO" --confdir "$(pwd)/conf" export "$DISTRIBUTION"
+fi
+
 # Already built and not forcing? Skip (mirrors github-copr's
 # 'skip if in repo' short-circuit).
 if [[ "$FORCE" != "1" ]] && reprepro -b "$LOCAL_REPO" list "$DISTRIBUTION" 2>/dev/null | grep -q " ${pkg_name} "; then

@@ -83,4 +83,6 @@ jobs:
           endpoint = https://${{ secrets.CLOUDFLARE_ACCOUNT_ID }}.r2.cloudflarestorage.com
           EOF2
       - name: Publish to R2
-        run: rclone sync local-repo/ "r2:${R2_BUCKET}/deb/26.04-resolute/"
+        run: |
+          rclone sync local-repo/ "r2:${R2_BUCKET}/deb/26.04-resolute/"
+          rclone copyto public.gpg "r2:${R2_BUCKET}/deb/public.gpg"
