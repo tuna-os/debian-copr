@@ -10,6 +10,10 @@ set -euo pipefail
 BUILD_IMAGE="localhost/debian-copr-builder:resolute"
 LOCAL_REPO="${LOCAL_REPO:-$(pwd)/local-repo}"
 DISTRIBUTION="${DISTRIBUTION:-resolute}"
+# conf-unsigned (no SignWith) rather than conf (SignWith: default) — no GPG
+# key is available in these intermediate build/import steps, only in the
+# final publish job that re-exports and signs with the real key.
+CONFDIR="$(pwd)/conf-unsigned"
 MANIFEST="build-order-xfce.yml"
 PACKAGE=""
 FORCE=0
@@ -43,12 +47,12 @@ mkdir -p "$LOCAL_REPO"
 # up front so the repo always has valid (if empty) metadata to serve.
 if [[ ! -f "${LOCAL_REPO}/dists/${DISTRIBUTION}/Release" ]]; then
     echo "==> Initializing empty local repo for ${DISTRIBUTION}..."
-    reprepro -b "$LOCAL_REPO" --confdir "$(pwd)/conf" export "$DISTRIBUTION"
+    reprepro -b "$LOCAL_REPO" --confdir "$CONFDIR" export "$DISTRIBUTION"
 fi
 
 # Already built and not forcing? Skip (mirrors github-copr's
 # 'skip if in repo' short-circuit).
-if [[ "$FORCE" != "1" ]] && reprepro -b "$LOCAL_REPO" list "$DISTRIBUTION" 2>/dev/null | grep -q " ${pkg_name} "; then
+if [[ "$FORCE" != "1" ]] && reprepro -b "$LOCAL_REPO" --confdir "$CONFDIR" list "$DISTRIBUTION" 2>/dev/null | grep -q " ${pkg_name} "; then
     echo "==> [${pkg_name}] already in repo; skipping (use --force to rebuild)"
     exit 0
 fi
@@ -95,7 +99,7 @@ podman run --rm --privileged \
 echo "==> [${pkg_name}] Importing into local repo..."
 flock "${LOCAL_REPO}/repo.lock" -c "
     for deb in ${resultdir}/*.deb; do
-        reprepro -b '${LOCAL_REPO}' --confdir '$(pwd)/conf' includedeb '${DISTRIBUTION}' \"\$deb\"
+        reprepro -b '${LOCAL_REPO}' --confdir '${CONFDIR}' includedeb '${DISTRIBUTION}' \"\$deb\"
     done
 "
 

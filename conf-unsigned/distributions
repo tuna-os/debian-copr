@@ -1,0 +1,6 @@
+Origin: TunaOS
+Label: TunaOS XFCE Wayland
+Codename: resolute
+Architectures: amd64
+Components: main
+Description: TunaOS's Wayland-native XFCE stack (xfwl4 + adapted xfce4 components) for Ubuntu 26.04 (Resolute Raccoon)
