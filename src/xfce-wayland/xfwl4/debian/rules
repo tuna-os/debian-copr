@@ -14,6 +14,14 @@ override_dh_auto_build:
 	# Patch pkg-config .pc files to report high versions so sys crate
 	# version checks pass. Ubuntu 26.04 ships older libxfce4/libxfconf.
 	for f in libxfconf-0.pc libxfce4kbd-private-3.pc; do find / -name "$$f" -exec sed -i 's/^Version: [0-9.]*/Version: 99.0.0/g' {} + 2>/dev/null || true; done
+	# Fetch xfce-wayland-protocols — git submodule not included in tarball
+	# (same as github-copr's Source2 in xfwl4.spec).
+	PROTO_DIR="resources/xfce-wayland-protocols"
+	if [ ! -d "$$PROTO_DIR" ]; then
+	  mkdir -p "$$PROTO_DIR" && \
+	  curl -sSL "https://gitlab.xfce.org/xfce/xfce-wayland-protocols/-/archive/6082cfa492154aec266527193bf8f6142ab14977/xfce-wayland-protocols-6082cfa492154aec266527193bf8f6142ab14977.tar.gz" | \
+	    tar -xz --strip-components=1 -C "$$PROTO_DIR"
+	fi
 	# Force clean rebuild — cargo caches compiled build scripts across runs
 	cargo clean -p gettext-sys -p libxfce4kbd-private-sys -p xfconf-sys -p libxfce4ui-sys
 	# GETTEXT_SYSTEM=1 tells gettext-sys to link against system gettext
