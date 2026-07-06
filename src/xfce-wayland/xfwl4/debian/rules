@@ -4,6 +4,8 @@
 # repo, not the official Debian/Ubuntu archive, so offline-reproducible
 # vendoring isn't a hard requirement here).
 export RUSTFLAGS = -C relocation-model=pic
+export CFLAGS = -std=gnu11
+export CXXFLAGS = -std=gnu++17
 
 %:
 	dh $@
@@ -14,7 +16,8 @@ override_dh_auto_build:
 	# Patch pkg-config .pc files to report high versions so sys crate
 	# version checks pass. Ubuntu 26.04 ships older libxfce4/libxfconf.
 	for f in libxfconf-0.pc libxfce4kbd-private-3.pc; do find / -name "$$f" -exec sed -i 's/^Version: [0-9.]*/Version: 99.0.0/g' {} + 2>/dev/null || true; done
-	cargo build --release \
+	# Ubuntu 26.04 headers use C11 _Generic; ensure compiler mode matches
+	CFLAGS="-std=gnu11" CXXFLAGS="-std=gnu++17" cargo build --release \
 	  --no-default-features \
 	  --features udev,egl,xwayland,smithay/renderer_pixman,smithay/renderer_gl
 
