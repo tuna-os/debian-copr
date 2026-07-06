@@ -13,7 +13,7 @@ override_dh_auto_build:
 	# before compilation. Ubuntu 26.04 ships libxfconf-0 v4.20.0 but
 	# xfconf-sys requires >= 4.21.2.
 	cargo fetch
-	find /root/.cargo/registry/src -maxdepth 2 -name 'build.rs' \
+	find /root/.cargo/registry/src -maxdepth 3 -name 'build.rs' \
 	  -exec sed -i \
 	    -e 's/libxfconf-0 >= 4\.21\.2/libxfconf-0 >= 4.20.0/g' \
 	    -e 's/libxfce4kbd-private-3 >= 4\.21\.4/libxfce4kbd-private-3 >= 4.20.2/g' {} +
