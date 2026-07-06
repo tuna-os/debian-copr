@@ -14,11 +14,9 @@ override_dh_auto_build:
 	# Patch pkg-config .pc files to report high versions so sys crate
 	# version checks pass. Ubuntu 26.04 ships older libxfce4/libxfconf.
 	for f in libxfconf-0.pc libxfce4kbd-private-3.pc; do find / -name "$$f" -exec sed -i 's/^Version: [0-9.]*/Version: 99.0.0/g' {} + 2>/dev/null || true; done
-	# Fetch xfce-wayland-protocols — git submodule not included in tarball
-	# (same as github-copr's Source2 in xfwl4.spec).
-	test -d "resources/xfce-wayland-protocols" || (mkdir -p "resources/xfce-wayland-protocols" && \
-	  curl -sSL "https://gitlab.xfce.org/xfce/xfce-wayland-protocols/-/archive/6082cfa492154aec266527193bf8f6142ab14977/xfce-wayland-protocols-6082cfa492154aec266527193bf8f6142ab14977.tar.gz" | \
-	  tar -xz --strip-components=1 -C "resources/xfce-wayland-protocols")
+	# Fetch xfce-wayland-protocols — git submodule not included in tarball.
+	# Same as github-copr's Source2 in xfwl4.spec. One-liner for Makefile.
+	mkdir -p resources/xfce-wayland-protocols && curl -sSL "https://gitlab.xfce.org/xfce/xfce-wayland-protocols/-/archive/6082cfa492154aec266527193bf8f6142ab14977/xfce-wayland-protocols-6082cfa492154aec266527193bf8f6142ab14977.tar.gz" | tar -xz --strip-components=1 -C resources/xfce-wayland-protocols
 	# Apply upstream patch: fix dma cfg gate for udev-only builds
 	# (same as github-copr's Patch0 in xfwl4.spec).
 	patch -p1 < debian/patches/fix-dma-cfg-gate-for-udev.patch 2>/dev/null || true
