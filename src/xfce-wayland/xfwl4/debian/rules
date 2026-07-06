@@ -9,6 +9,12 @@ export RUSTFLAGS = -C relocation-model=pic
 	dh $@
 
 override_dh_auto_build:
+	# Fetch dependencies first so we can patch xfconf-sys version check
+	# before compilation. Ubuntu 26.04 ships libxfconf-0 v4.20.0 but
+	# xfconf-sys requires >= 4.21.2.
+	cargo fetch
+	find /root/.cargo/registry/src -maxdepth 2 -path '*/xfconf-sys-*/build.rs' \
+	  -exec sed -i 's/libxfconf-0 >= 4\.21\.2/libxfconf-0 >= 4.20.0/g' {} +
 	cargo build --release \
 	  --no-default-features \
 	  --features udev,egl,xwayland,smithay/renderer_pixman,smithay/renderer_gl
