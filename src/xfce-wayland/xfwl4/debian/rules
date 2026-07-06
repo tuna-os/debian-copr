@@ -16,12 +16,12 @@ override_dh_auto_build:
 	for f in libxfconf-0.pc libxfce4kbd-private-3.pc; do find / -name "$$f" -exec sed -i 's/^Version: [0-9.]*/Version: 99.0.0/g' {} + 2>/dev/null || true; done
 	# Fetch xfce-wayland-protocols — git submodule not included in tarball
 	# (same as github-copr's Source2 in xfwl4.spec).
-	PROTO_DIR="resources/xfce-wayland-protocols"
-	if [ ! -d "$$PROTO_DIR" ]; then
-	  mkdir -p "$$PROTO_DIR" && \
+	test -d "resources/xfce-wayland-protocols" || (mkdir -p "resources/xfce-wayland-protocols" && \
 	  curl -sSL "https://gitlab.xfce.org/xfce/xfce-wayland-protocols/-/archive/6082cfa492154aec266527193bf8f6142ab14977/xfce-wayland-protocols-6082cfa492154aec266527193bf8f6142ab14977.tar.gz" | \
-	    tar -xz --strip-components=1 -C "$$PROTO_DIR"
-	fi
+	  tar -xz --strip-components=1 -C "resources/xfce-wayland-protocols")
+	# Apply upstream patch: fix dma cfg gate for udev-only builds
+	# (same as github-copr's Patch0 in xfwl4.spec).
+	patch -p1 < debian/patches/fix-dma-cfg-gate-for-udev.patch 2>/dev/null || true
 	# Force clean rebuild — cargo caches compiled build scripts across runs
 	cargo clean -p gettext-sys -p libxfce4kbd-private-sys -p xfconf-sys -p libxfce4ui-sys
 	# GETTEXT_SYSTEM=1 tells gettext-sys to link against system gettext
