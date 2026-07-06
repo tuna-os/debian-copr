@@ -4,8 +4,8 @@
 # repo, not the official Debian/Ubuntu archive, so offline-reproducible
 # vendoring isn't a hard requirement here).
 export RUSTFLAGS = -C relocation-model=pic
-export CFLAGS = -std=gnu11
-export CXXFLAGS = -std=gnu++17
+export CFLAGS = -std=gnu23
+export CXXFLAGS = -std=gnu++26
 
 %:
 	dh $@
