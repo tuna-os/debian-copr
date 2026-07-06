@@ -11,11 +11,9 @@ export RUSTFLAGS = -C relocation-model=pic
 override_dh_auto_build:
 	# Fetch dependencies first so we can patch before compilation.
 	cargo fetch
-	# Patch pkg-config .pc files to report versions the xfce4 sys crates expect.
-	# Ubuntu 26.04 ships older libxfce4/libxfconf than what upstream wants.
-	for f in libxfconf-0.pc libxfce4kbd-private-3.pc; do
-	  find / -name "$$f" -exec sed -i 's/^Version: [0-9.]*$$/Version: 99.0.0/g' {} + 2>/dev/null || true
-	done
+	# Patch pkg-config .pc files to report high versions so sys crate
+	# version checks pass. Ubuntu 26.04 ships older libxfce4/libxfconf.
+	for f in libxfconf-0.pc libxfce4kbd-private-3.pc; do find / -name "$$f" -exec sed -i 's/^Version: [0-9.]*/Version: 99.0.0/g' {} + 2>/dev/null || true; done
 	cargo build --release \
 	  --no-default-features \
 	  --features udev,egl,xwayland,smithay/renderer_pixman,smithay/renderer_gl
