@@ -16,7 +16,10 @@ override_dh_auto_build:
 	for f in libxfconf-0.pc libxfce4kbd-private-3.pc; do find / -name "$$f" -exec sed -i 's/^Version: [0-9.]*/Version: 99.0.0/g' {} + 2>/dev/null || true; done
 	# Force clean rebuild — cargo caches compiled build scripts across runs
 	cargo clean -p gettext-sys -p libxfce4kbd-private-sys -p xfconf-sys -p libxfce4ui-sys
-	cargo build --release \
+	# GETTEXT_SYSTEM=1 tells gettext-sys to link against system gettext
+	# (glibc's built-in) instead of building its own bundled copy, which
+	# fails to compile with GCC 14+ / C11 _Generic in system headers.
+	GETTEXT_SYSTEM=1 cargo build --release \
 	  --no-default-features \
 	  --features udev,egl,xwayland,smithay/renderer_pixman,smithay/renderer_gl
 
