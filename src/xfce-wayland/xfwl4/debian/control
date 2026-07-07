@@ -21,6 +21,7 @@ Build-Depends: debhelper-compat (= 13),
  libsm-dev,
  libsystemd-dev,
  libstartup-notification0-dev,
+ libgbm-dev,
  gettext
 Standards-Version: 4.6.2
 Homepage: https://gitlab.xfce.org/xfce/xfwl4
