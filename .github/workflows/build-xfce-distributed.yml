@@ -15,7 +15,7 @@ jobs:
   build-builder-image:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Build builder image
         run: podman build -t localhost/debian-copr-builder:resolute -f builder/Containerfile builder/
       - name: Save image
@@ -30,7 +30,7 @@ jobs:
     needs: build-builder-image
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: actions/download-artifact@v4
         with: {name: builder-image, path: /tmp}
       - run: podman load -i /tmp/builder-image.tar
@@ -54,7 +54,7 @@ jobs:
     needs: build-xfwl4-compositor
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Install dependencies
         run: |
           sudo apt-get update -q && sudo apt-get install -y -q reprepro gnupg
