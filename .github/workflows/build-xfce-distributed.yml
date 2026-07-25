@@ -20,7 +20,7 @@ jobs:
         run: podman build -t localhost/debian-copr-builder:resolute -f builder/Containerfile builder/
       - name: Save image
         run: podman save -o /tmp/builder-image.tar localhost/debian-copr-builder:resolute
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: builder-image
           path: /tmp/builder-image.tar
@@ -31,7 +31,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with: {name: builder-image, path: /tmp}
       - run: podman load -i /tmp/builder-image.tar
       - name: Install host dependencies
@@ -44,7 +44,7 @@ jobs:
           ARGS=(--package src/xfce-wayland/xfwl4)
           if [[ "${{ github.event.inputs.force }}" == "true" ]]; then ARGS+=(--force); fi
           ./scripts/build-chain.sh "${ARGS[@]}"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: repo-xfwl4-compositor
           path: local-repo
@@ -59,7 +59,7 @@ jobs:
         run: |
           sudo apt-get update -q && sudo apt-get install -y -q reprepro gnupg
           curl -fsSL https://rclone.org/install.sh | sudo bash
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with: {name: repo-xfwl4-compositor, path: local-repo}
       - name: Import GPG key
         uses: crazy-max/ghaction-import-gpg@v7
