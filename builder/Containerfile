@@ -2,7 +2,7 @@
 # Every package builds inside a fresh, --rm'd instance of THIS image via
 # 'apt-get build-dep' + 'dpkg-buildpackage' directly in its own rootfs —
 # the container itself IS the throwaway isolated build environment,
-# exactly like mock's installroot in github-copr, minus the extra
+# exactly like mock's installroot in tunaos-packages, minus the extra
 # chroot-within-a-container layer (schroot/sbuild) that caused most of
 # that pipeline's early fragility (nested-mount/permission issues).
 FROM ubuntu:26.04
