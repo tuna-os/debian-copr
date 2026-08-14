@@ -1,6 +1,6 @@
 #!/usr/bin/make -f
 # Plain cargo build (network access during build, same pragmatic choice
-# as this package's RPM sibling in tuna-os/github-copr — this is our own
+# as this package's RPM sibling in tuna-os/tunaos-packages — this is our own
 # repo, not the official Debian/Ubuntu archive, so offline-reproducible
 # vendoring isn't a hard requirement here).
 export RUSTFLAGS = -C relocation-model=pic
@@ -15,10 +15,10 @@ override_dh_auto_build:
 	# version checks pass. Ubuntu 26.04 ships older libxfce4/libxfconf.
 	for f in libxfconf-0.pc libxfce4kbd-private-3.pc; do find / -name "$$f" -exec sed -i 's/^Version: [0-9.]*/Version: 99.0.0/g' {} + 2>/dev/null || true; done
 	# Fetch xfce-wayland-protocols — git submodule not included in tarball.
-	# Same as github-copr's Source2 in xfwl4.spec. One-liner for Makefile.
+	# Same as tunaos-packages' Source2 in xfwl4.spec. One-liner for Makefile.
 	mkdir -p resources/xfce-wayland-protocols && curl -sSL "https://gitlab.xfce.org/xfce/xfce-wayland-protocols/-/archive/6082cfa492154aec266527193bf8f6142ab14977/xfce-wayland-protocols-6082cfa492154aec266527193bf8f6142ab14977.tar.gz" | tar -xz --strip-components=1 -C resources/xfce-wayland-protocols
 	# Apply upstream patch: fix dma cfg gate for udev-only builds
-	# (same as github-copr's Patch0 in xfwl4.spec).
+	# (same as tunaos-packages' Patch0 in xfwl4.spec).
 	patch -p1 < debian/patches/fix-dma-cfg-gate-for-udev.patch 2>/dev/null || true
 	# Force clean rebuild — cargo caches compiled build scripts across runs
 	cargo clean -p gettext-sys -p libxfce4kbd-private-sys -p xfconf-sys -p libxfce4ui-sys

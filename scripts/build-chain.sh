@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Build one package via a fresh, privileged, --rm'd Ubuntu 26.04 container
 # (the "builder" image — see builder/Containerfile), then import the
-# resulting .debs into the local reprepro repo. Mirrors github-copr's
+# resulting .debs into the local reprepro repo. Mirrors tunaos-packages'
 # scripts/build-chain.sh (podman-run-per-package + shared local-repo),
 # with sbuild/schroot's chroot-in-a-container step removed entirely —
 # the --rm container instance IS the throwaway build environment.
@@ -50,7 +50,7 @@ if [[ ! -f "${LOCAL_REPO}/dists/${DISTRIBUTION}/Release" ]]; then
     reprepro -b "$LOCAL_REPO" --confdir "$CONFDIR" export "$DISTRIBUTION"
 fi
 
-# Already built and not forcing? Skip (mirrors github-copr's
+# Already built and not forcing? Skip (mirrors tunaos-packages'
 # 'skip if in repo' short-circuit).
 if [[ "$FORCE" != "1" ]] && reprepro -b "$LOCAL_REPO" --confdir "$CONFDIR" list "$DISTRIBUTION" 2>/dev/null | grep -q " ${pkg_name} "; then
     echo "==> [${pkg_name}] already in repo; skipping (use --force to rebuild)"

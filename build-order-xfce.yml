@@ -1,10 +1,10 @@
 # Tiered dependency manifest for the XFCE Wayland .deb stack — same
-# schema/philosophy as github-copr's build-order-xfce.yml. A package only
+# schema/philosophy as tunaos-packages' build-order-xfce.yml. A package only
 # builds once every earlier tier is already in the local apt repo, so its
 # build-deps resolve.
 #
 # Grows incrementally as each package is ported from its already-fixed
-# github-copr RPM spec (see that repo's build-order-xfce.yml for the full
+# tunaos-packages RPM spec (see that repo's build-order-xfce.yml for the full
 # target list and tier order — porting proceeds tier by tier).
 #
 # R2 destination: deb/26.04-resolute/ (served from deb.tunaos.org),
