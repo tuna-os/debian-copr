@@ -133,10 +133,20 @@ test_force_builds_and_initializes_repo() {
     grep -q ' includedeb resolute ' "$CALL_LOG"
 }
 
+test_rejects_missing_upstream_source() {
+    rm -f "$FIXTURE/project/src/xfce-wayland/xfwl4/upstream-source.txt"
+    local output
+    if output="$(cd "$FIXTURE/project" && PATH="$FIXTURE/bin:$PATH" ./scripts/build-chain.sh --package src/xfce-wayland/xfwl4 2>&1)"; then
+        return 1
+    fi
+    assert_contains "$output" "upstream-source.txt not found"
+}
+
 run_test "requires --package" test_requires_package
 run_test "rejects unknown arguments" test_rejects_unknown_argument
 run_test "rejects packages outside the manifest" test_rejects_package_outside_manifest
 run_test "skips packages already in the repository" test_skips_existing_package
 run_test "--force builds and initializes an empty repository" test_force_builds_and_initializes_repo
+run_test "rejects packages missing upstream-source.txt" test_rejects_missing_upstream_source
 
 echo "1..${TESTS}"
