@@ -142,11 +142,40 @@ test_rejects_missing_upstream_source() {
     assert_contains "$output" "upstream-source.txt not found"
 }
 
+test_custom_manifest_option() {
+    cp "$FIXTURE/project/build-order-xfce.yml" "$FIXTURE/project/custom-manifest.yml"
+    local output
+    output="$(cd "$FIXTURE/project" && PATH="$FIXTURE/bin:$PATH" \
+        ./scripts/build-chain.sh --package src/xfce-wayland/xfwl4 --manifest custom-manifest.yml 2>&1)"
+    assert_contains "$output" "Done."
+}
+
+test_custom_image_option() {
+    local output
+    output="$(cd "$FIXTURE/project" && PATH="$FIXTURE/bin:$PATH" \
+        ./scripts/build-chain.sh --package src/xfce-wayland/xfwl4 --image custom/builder:tag 2>&1)"
+    assert_contains "$output" "Building in custom/builder:tag..."
+    grep -q '^podman run .* custom/builder:tag ' "$CALL_LOG"
+}
+
+test_rejects_missing_manifest_file() {
+    local output
+    if output="$(cd "$FIXTURE/project" && PATH="$FIXTURE/bin:$PATH" \
+        ./scripts/build-chain.sh --package src/xfce-wayland/xfwl4 --manifest nonexistent.yml 2>&1)"; then
+        return 1
+    fi
+    assert_contains "$output" "not found in nonexistent.yml"
+}
+
 run_test "requires --package" test_requires_package
 run_test "rejects unknown arguments" test_rejects_unknown_argument
 run_test "rejects packages outside the manifest" test_rejects_package_outside_manifest
 run_test "skips packages already in the repository" test_skips_existing_package
 run_test "--force builds and initializes an empty repository" test_force_builds_and_initializes_repo
 run_test "rejects packages missing upstream-source.txt" test_rejects_missing_upstream_source
+run_test "supports custom --manifest option" test_custom_manifest_option
+run_test "supports custom --image option" test_custom_image_option
+run_test "rejects nonexistent --manifest file" test_rejects_missing_manifest_file
 
 echo "1..${TESTS}"
+
