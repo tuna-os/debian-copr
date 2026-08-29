@@ -167,6 +167,16 @@ test_rejects_missing_manifest_file() {
     assert_contains "$output" "not found in nonexistent.yml"
 }
 
+test_custom_local_repo_env_override() {
+    local custom_repo="$FIXTURE/project/custom-repo"
+    local output
+    output="$(cd "$FIXTURE/project" && LOCAL_REPO="$custom_repo" PATH="$FIXTURE/bin:$PATH" \
+        ./scripts/build-chain.sh --package src/xfce-wayland/xfwl4 --force 2>&1)"
+    assert_contains "$output" "Done."
+    [[ -d "$custom_repo" ]] || fail "expected custom LOCAL_REPO directory to be created"
+    grep -q "reprepro -b ${custom_repo}" "$CALL_LOG"
+}
+
 run_test "requires --package" test_requires_package
 run_test "rejects unknown arguments" test_rejects_unknown_argument
 run_test "rejects packages outside the manifest" test_rejects_package_outside_manifest
@@ -176,6 +186,8 @@ run_test "rejects packages missing upstream-source.txt" test_rejects_missing_ups
 run_test "supports custom --manifest option" test_custom_manifest_option
 run_test "supports custom --image option" test_custom_image_option
 run_test "rejects nonexistent --manifest file" test_rejects_missing_manifest_file
+run_test "supports LOCAL_REPO environment variable override" test_custom_local_repo_env_override
 
 echo "1..${TESTS}"
+
 
