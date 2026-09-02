@@ -142,6 +142,40 @@ test_rejects_missing_upstream_source() {
     assert_contains "$output" "upstream-source.txt not found"
 }
 
+# sha256 of the empty file the curl stub writes.
+EMPTY_SHA256="e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+
+test_verifies_matching_upstream_digest() {
+    printf '%s\n' "$EMPTY_SHA256" \
+        > "$FIXTURE/project/src/xfce-wayland/xfwl4/upstream-source.sha256"
+    local output
+    output="$(cd "$FIXTURE/project" && FAKE_ALREADY_BUILT=1 PATH="$FIXTURE/bin:$PATH" \
+        ./scripts/build-chain.sh --package src/xfce-wayland/xfwl4 --force 2>&1)"
+    assert_contains "$output" "Verifying upstream source digest"
+    assert_contains "$output" "Done."
+    grep -q '^podman run ' "$CALL_LOG"
+}
+
+test_rejects_mismatched_upstream_digest() {
+    printf '%s\n' "0000000000000000000000000000000000000000000000000000000000000000" \
+        > "$FIXTURE/project/src/xfce-wayland/xfwl4/upstream-source.sha256"
+    local output
+    if output="$(cd "$FIXTURE/project" && FAKE_ALREADY_BUILT=1 PATH="$FIXTURE/bin:$PATH" \
+        ./scripts/build-chain.sh --package src/xfce-wayland/xfwl4 --force 2>&1)"; then
+        return 1
+    fi
+    # Nothing from the tarball may run once the digest does not match.
+    ! grep -q '^podman ' "$CALL_LOG"
+}
+
+test_warns_when_upstream_digest_absent() {
+    local output
+    output="$(cd "$FIXTURE/project" && FAKE_ALREADY_BUILT=1 PATH="$FIXTURE/bin:$PATH" \
+        ./scripts/build-chain.sh --package src/xfce-wayland/xfwl4 --force 2>&1)"
+    assert_contains "$output" "upstream tarball is unverified"
+    assert_contains "$output" "Done."
+}
+
 test_custom_manifest_option() {
     cp "$FIXTURE/project/build-order-xfce.yml" "$FIXTURE/project/custom-manifest.yml"
     local output
@@ -183,6 +217,9 @@ run_test "rejects packages outside the manifest" test_rejects_package_outside_ma
 run_test "skips packages already in the repository" test_skips_existing_package
 run_test "--force builds and initializes an empty repository" test_force_builds_and_initializes_repo
 run_test "rejects packages missing upstream-source.txt" test_rejects_missing_upstream_source
+run_test "builds when the upstream digest matches" test_verifies_matching_upstream_digest
+run_test "aborts before building when the upstream digest mismatches" test_rejects_mismatched_upstream_digest
+run_test "warns but builds when no upstream digest is recorded" test_warns_when_upstream_digest_absent
 run_test "supports custom --manifest option" test_custom_manifest_option
 run_test "supports custom --image option" test_custom_image_option
 run_test "rejects nonexistent --manifest file" test_rejects_missing_manifest_file
