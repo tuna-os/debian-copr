@@ -117,8 +117,15 @@ test_skips_existing_package() {
     output="$(cd "$FIXTURE/project" && FAKE_ALREADY_BUILT=1 PATH="$FIXTURE/bin:$PATH" \
         ./scripts/build-chain.sh --package src/xfce-wayland/xfwl4 2>&1)"
     assert_contains "$output" "already in repo; skipping"
-    ! grep -q '^curl ' "$CALL_LOG"
-    ! grep -q '^podman ' "$CALL_LOG"
+    # A `! grep ...` statement is exempt from errexit (ShellCheck SC2251), so
+    # writing these as negations left them unable to fail the test. Assert on
+    # the positive condition instead.
+    if grep -q '^curl ' "$CALL_LOG"; then
+        fail "expected no upstream fetch when the package is skipped"
+    fi
+    if grep -q '^podman ' "$CALL_LOG"; then
+        fail "expected no container build when the package is skipped"
+    fi
 }
 
 test_force_builds_and_initializes_repo() {
