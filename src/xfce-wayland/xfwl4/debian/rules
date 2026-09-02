@@ -5,6 +5,15 @@
 # vendoring isn't a hard requirement here).
 export RUSTFLAGS = -C relocation-model=pic
 
+# xfce-wayland-protocols is a git submodule, so it is absent from the upstream
+# archive and has to be fetched separately at build time. Pin the commit AND the
+# digest of the bytes served for it: the resulting binary is shipped in a
+# GPG-signed .deb, so a commit-pinned URL alone ("whatever gitlab.xfce.org
+# returns today") is not enough to attest what was compiled.
+XWP_COMMIT = 6082cfa492154aec266527193bf8f6142ab14977
+XWP_URL = https://gitlab.xfce.org/xfce/xfce-wayland-protocols/-/archive/$(XWP_COMMIT)/xfce-wayland-protocols-$(XWP_COMMIT).tar.gz
+XWP_SHA256 = bb6f9d5ad772c9114b6f15fd2c288fd344e07e1ccfd61e23890ae5c501c953cc
+
 %:
 	dh $@
 
@@ -15,8 +24,15 @@ override_dh_auto_build:
 	# version checks pass. Ubuntu 26.04 ships older libxfce4/libxfconf.
 	for f in libxfconf-0.pc libxfce4kbd-private-3.pc; do find / -name "$$f" -exec sed -i 's/^Version: [0-9.]*/Version: 99.0.0/g' {} + 2>/dev/null || true; done
 	# Fetch xfce-wayland-protocols — git submodule not included in tarball.
-	# Same as tunaos-packages' Source2 in xfwl4.spec. One-liner for Makefile.
-	mkdir -p resources/xfce-wayland-protocols && curl -sSL "https://gitlab.xfce.org/xfce/xfce-wayland-protocols/-/archive/6082cfa492154aec266527193bf8f6142ab14977/xfce-wayland-protocols-6082cfa492154aec266527193bf8f6142ab14977.tar.gz" | tar -xz --strip-components=1 -C resources/xfce-wayland-protocols
+	# Same as tunaos-packages' Source2 in xfwl4.spec. Downloaded to a file and
+	# checksummed before extraction rather than piped into tar: the old
+	# `curl | tar` form both skipped verification and swallowed curl's exit
+	# status, so a truncated or substituted response extracted silently.
+	curl -fsSL "$(XWP_URL)" -o xfce-wayland-protocols.tar.gz
+	echo "$(XWP_SHA256)  xfce-wayland-protocols.tar.gz" | sha256sum -c -
+	mkdir -p resources/xfce-wayland-protocols
+	tar -xz --strip-components=1 -C resources/xfce-wayland-protocols -f xfce-wayland-protocols.tar.gz
+	rm -f xfce-wayland-protocols.tar.gz
 	# Apply upstream patch: fix dma cfg gate for udev-only builds
 	# (same as tunaos-packages' Patch0 in xfwl4.spec).
 	patch -p1 < debian/patches/fix-dma-cfg-gate-for-udev.patch 2>/dev/null || true

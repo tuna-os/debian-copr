@@ -67,6 +67,20 @@ if [[ ! -f "${PACKAGE}/upstream-source.txt" ]]; then
 fi
 url="$(cat "${PACKAGE}/upstream-source.txt")"
 curl -fsSL "$url" -o "${srcdir}/src.tar.gz"
+
+# The extracted tree is handed to dpkg-buildpackage, which executes debian/rules,
+# build.rs and every other executable path inside it, and the resulting .deb is
+# GPG-signed by the publish job. A commit-pinned URL fixes which commit is asked
+# for, not what the server returns, so verify the bytes against a recorded digest
+# before anything in the tarball runs. Mismatch is fatal — never build unverified
+# source into a signed package.
+if [[ -f "${PACKAGE}/upstream-source.sha256" ]]; then
+    echo "==> [${pkg_name}] Verifying upstream source digest..."
+    echo "$(cat "${PACKAGE}/upstream-source.sha256")  ${srcdir}/src.tar.gz" | sha256sum -c -
+else
+    echo "WARNING: ${PACKAGE}/upstream-source.sha256 not found; upstream tarball is unverified" >&2
+fi
+
 mkdir -p "${srcdir}/extracted"
 tar -xzf "${srcdir}/src.tar.gz" -C "${srcdir}/extracted" --strip-components=1
 
