@@ -16,7 +16,7 @@ build model is shared between both.
 | `builder/Containerfile` | The Ubuntu 26.04 (`resolute`) build environment image |
 | `conf/`, `conf-unsigned/` | `reprepro` repository configuration (signed vs. unsigned intermediate imports) |
 | `scripts/build-chain.sh` | Builds one package in a fresh Podman container, then imports the resulting `.deb`s into the local `reprepro` repo |
-| `tests/test-build-chain.sh` | Bash assertions covering `scripts/build-chain.sh` against fixture directories |
+| `tests/test-build-chain.sh` | Bash assertions covering `scripts/build-chain.sh` against fixture directories — not run by any workflow, so it's a local-only check |
 | `.github/workflows/validate.yml` | yamllint, shellcheck, and build-order manifest validation on every push/PR |
 | `.github/workflows/build-xfce-distributed.yml` | Manually dispatched build-and-publish-to-R2 workflow |
 
@@ -45,7 +45,8 @@ Then run the packaging-manifest check ([`validate.yml`](.github/workflows/valida
 has the full script) to confirm every `build-order-xfce.yml` entry resolves
 to real `debian/control` and `upstream-source.txt` files.
 
-To exercise `scripts/build-chain.sh` itself:
+To exercise `scripts/build-chain.sh` itself — CI does **not** run this yet, so
+it's on you to catch a regression here before opening a PR:
 
 ```bash
 bash tests/test-build-chain.sh
@@ -62,8 +63,9 @@ podman build -t localhost/debian-copr-builder:resolute \
 ## Pull requests
 
 - Keep each PR focused on one package or one tooling change.
-- Run the validation commands above before opening — CI runs the same
-  checks and will otherwise fail on the same things.
+- Run the validation commands above before opening. CI (`validate.yml`) runs
+  the yamllint/shellcheck/packaging-manifest checks and will fail on the same
+  things; `tests/test-build-chain.sh` is local-only, so run it yourself.
 - Explain which upstream release/artifact a packaging change targets.
 
 ## Project docs
