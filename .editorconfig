@@ -1,0 +1,35 @@
+root = true
+
+[*]
+end_of_line = lf
+insert_final_newline = true
+charset = utf-8
+trim_trailing_whitespace = true
+
+# Patches are byte-exact: trailing whitespace is significant in diff
+# context lines, so never let an editor normalise these.
+[*.{patch,diff}]
+trim_trailing_whitespace = false
+insert_final_newline = false
+
+[*.{sh,bash}]
+indent_style = space
+indent_size = 4
+
+# debian/rules is a makefile: recipe lines must start with a real tab, so an
+# editor that expands them silently breaks the build.
+[**/debian/rules]
+indent_style = tab
+
+[{Containerfile,Dockerfile}*]
+indent_style = space
+indent_size = 4
+
+[*.{yml,yaml,json}]
+indent_style = space
+indent_size = 2
+
+[*.md]
+indent_style = space
+indent_size = 2
+trim_trailing_whitespace = false
