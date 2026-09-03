@@ -1,5 +1,10 @@
 # debian-copr ROADMAP
 
+> [!WARNING]
+> **Deprecated.** Nothing consumes this repository's packages — see
+> [README.md](README.md#why-this-is-deprecated). The milestones below are kept
+> as a record of intent; none of them is being worked.
+
 This document tracks the strategic goals, release contracts, and milestone targets for the `debian-copr` APT package pipeline.
 
 ## Strategic Overview
