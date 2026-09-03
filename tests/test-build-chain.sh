@@ -15,6 +15,19 @@ assert_contains() {
     [[ "$haystack" == *"$needle"* ]] || fail "expected output to contain: ${needle}"
 }
 
+# Assert a command was never invoked. Written as an explicit `if` rather than
+# `! grep -q ...`: a `!`-prefixed command is exempt from `set -e`, so a bare
+# `! grep -q` that finds the pattern neither aborts the script nor changes a
+# later command's status — the assertion silently passes. Only the *last*
+# such line in a test function was ever enforced, via the function's exit
+# status (shellcheck SC2251).
+assert_not_called() {
+    local pattern="$1"
+    if grep -q "$pattern" "$CALL_LOG"; then
+        fail "expected no invocation matching ${pattern}"
+    fi
+}
+
 new_fixture() {
     FIXTURE="$(mktemp -d)"
     mkdir -p "$FIXTURE/bin" "$FIXTURE/project/scripts" \
@@ -117,8 +130,8 @@ test_skips_existing_package() {
     output="$(cd "$FIXTURE/project" && FAKE_ALREADY_BUILT=1 PATH="$FIXTURE/bin:$PATH" \
         ./scripts/build-chain.sh --package src/xfce-wayland/xfwl4 2>&1)"
     assert_contains "$output" "already in repo; skipping"
-    ! grep -q '^curl ' "$CALL_LOG"
-    ! grep -q '^podman ' "$CALL_LOG"
+    assert_not_called '^curl '
+    assert_not_called '^podman '
 }
 
 test_force_builds_and_initializes_repo() {

@@ -18,8 +18,21 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
+      # tests/ is included as well as scripts/: the shell test suite is code
+      # too, and it was a bare `! grep -q` in there (SC2251) that silently
+      # disabled an assertion.
       - name: shellcheck
-        run: sudo apt-get update -q && sudo apt-get install -y -q shellcheck && shellcheck scripts/*.sh
+        run: sudo apt-get update -q && sudo apt-get install -y -q shellcheck && shellcheck scripts/*.sh tests/*.sh
+
+  unit-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      # No install step: the suite stubs reprepro, curl, podman and friends
+      # into a fixture PATH, so it needs nothing but bash and runs in about a
+      # second.
+      - name: Run the build-chain test suite
+        run: bash tests/test-build-chain.sh
 
   build-order-schema:
     runs-on: ubuntu-latest
